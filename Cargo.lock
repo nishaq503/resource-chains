@@ -153,6 +153,7 @@ dependencies = [
  "deluxe",
  "proc-macro2",
  "quote",
+ "resource-cycles",
  "syn",
 ]
 

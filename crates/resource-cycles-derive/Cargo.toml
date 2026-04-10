@@ -16,3 +16,6 @@ workspace = true
 
 [lib]
 proc-macro = true
+
+[dev-dependencies]
+resource-cycles.workspace = true

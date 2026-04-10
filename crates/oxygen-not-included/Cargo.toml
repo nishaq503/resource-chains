@@ -6,7 +6,7 @@ license.workspace = true
 
 [dependencies]
 anyhow = { workspace = true }
-resource-cycles = { path = "../resource-cycles" }
+resource-cycles = { workspace = true }
 
 [lints]
 workspace = true

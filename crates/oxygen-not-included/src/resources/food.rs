@@ -2,7 +2,7 @@
 
 use resource_cycles::{Reflective, Resource};
 
-/// The [`OvagroNode`] produces [`OvagroFig`]s.
+/// The [`OvagroNode`](crate::plants::OvagroNode) produces [`OvagroFig`]s.
 #[derive(Reflective)]
 pub struct OvagroFig;
 

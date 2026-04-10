@@ -34,10 +34,10 @@ missing_docs_in_private_items = { level = "warn", priority = -12 }
 unnecessary_debug_formatting = { level = "allow", priority = 1 }
 
 [workspace.dependencies]
+resource-cycles = { path = "crates/resource-cycles" }
+resource-cycles-derive = { path = "crates/resource-cycles-derive" }
 anyhow = "1.0.102"
 quote = "1.0.45"
 syn = "2.0.117"
 deluxe = "0.5.0"
 proc-macro2 = "1.0.106"
-resource-cycles = { path = "crates/resource-cycles" }
-resource-cycles-derive = { path = "crates/resource-cycles-derive" }

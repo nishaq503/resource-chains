@@ -1,3 +1,5 @@
 //! Plants in the game "Oxygen Not Included".
 
-pub mod ovagro_node;
+mod ovagro_node;
+
+pub use ovagro_node::OvagroNode;

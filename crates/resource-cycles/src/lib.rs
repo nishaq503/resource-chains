@@ -13,6 +13,33 @@ extern crate resource_cycles_derive;
 pub use resource_cycles_derive::Reflective;
 
 /// A `Reflective` type is one that can be named as a `String` and parsed from a `String`.
+///
+/// # Example
+///
+/// ```rust
+/// use resource_cycles::Reflective;
+///
+/// struct Foo;
+///
+/// impl Reflective for Foo {
+///     type ParseError = String;
+///
+///     fn type_name() -> &'static str {
+///        "foo"
+///     }
+///
+///     fn parse(s: &str) -> Result<Self, Self::ParseError> {
+///         if s == "foo" {
+///             Ok(Self)
+///         } else {
+///             Err(format!("Invalid input: {s}. Expected 'foo'."))
+///         }
+///     }
+/// }
+///
+/// assert_eq!(Foo::type_name(), "foo");
+/// let foo = Foo::parse("foo").unwrap();
+/// ```
 pub trait Reflective: Sized {
     /// The type of error that can occur when parsing an instance of the type from a string.
     type ParseError;
