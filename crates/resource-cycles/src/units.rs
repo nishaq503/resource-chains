@@ -12,24 +12,9 @@ pub trait Time: Units {
 }
 
 /// A `Second` is a unit of time equal to one second.
+#[derive(Reflective)]
+#[extra_names(extra_names = ["sec", "s"])]
 pub struct Second;
-
-impl Reflective for Second {
-    type ParseError = anyhow::Error;
-
-    fn type_name() -> &'static str {
-        "s"
-    }
-
-    fn parse(s: &str) -> Result<Self, Self::ParseError> {
-        match s {
-            "s" | "second" | "Second" | "sec" => Ok(Self),
-            _ => Err(anyhow::anyhow!(
-                "Invalid time unit: {s}. Expected 's', 'second', 'Second', or 'sec'."
-            )),
-        }
-    }
-}
 
 impl Units for Second {}
 
@@ -40,23 +25,8 @@ impl Time for Second {
 }
 
 /// A `Kilogram` is a unit of mass equal to one kilogram.
+#[derive(Reflective)]
+#[extra_names(extra_names = ["kg"])]
 pub struct Kilogram;
-
-impl Reflective for Kilogram {
-    type ParseError = anyhow::Error;
-
-    fn type_name() -> &'static str {
-        "kg"
-    }
-
-    fn parse(s: &str) -> Result<Self, Self::ParseError> {
-        match s {
-            "kilogram" | "kg" => Ok(Self),
-            _ => Err(anyhow::anyhow!(
-                "Invalid mass unit: {s}. Expected 'kilogram' or 'kg'."
-            )),
-        }
-    }
-}
 
 impl Units for Kilogram {}

@@ -24,23 +24,7 @@ pub trait ActualizedProcess: Process {
 }
 
 /// A `Person` is a device that can perform processes.
+#[derive(Reflective)]
 pub struct Person;
-
-impl Reflective for Person {
-    type ParseError = anyhow::Error;
-
-    fn type_name() -> &'static str {
-        "person"
-    }
-
-    fn parse(s: &str) -> Result<Self, Self::ParseError> {
-        match s {
-            "person" | "Person" => Ok(Self),
-            _ => Err(anyhow::anyhow!(
-                "Invalid Person: {s}. Expected 'person' or 'Person'."
-            )),
-        }
-    }
-}
 
 impl Device for Person {}

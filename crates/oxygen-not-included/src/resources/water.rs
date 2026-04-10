@@ -3,22 +3,8 @@
 use resource_cycles::{Reflective, Resource, units::Kilogram};
 
 /// Pure [Water](https://oxygennotincluded.wiki.gg/wiki/Water) is measured in kilograms (kg).
+#[derive(Reflective)]
 pub struct Water;
-
-impl Reflective for Water {
-    type ParseError = anyhow::Error;
-
-    fn type_name() -> &'static str {
-        "water"
-    }
-
-    fn parse(s: &str) -> Result<Self, Self::ParseError> {
-        match s {
-            "water" | "Water" => Ok(Self),
-            _ => Err(anyhow::anyhow!("Invalid resource: {s}. Expected 'water'.")),
-        }
-    }
-}
 
 impl Resource for Water {
     type Units = Kilogram;

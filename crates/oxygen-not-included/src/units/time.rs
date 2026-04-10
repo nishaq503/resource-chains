@@ -6,24 +6,8 @@ use resource_cycles::{
 };
 
 /// In "Oxygen Not Included", a "[cycle](https://oxygennotincluded.wiki.gg/wiki/Cycles)" is 600 seconds.
+#[derive(Reflective)]
 pub struct Cycle;
-
-impl Reflective for Cycle {
-    type ParseError = anyhow::Error;
-
-    fn type_name() -> &'static str {
-        "cycle"
-    }
-
-    fn parse(s: &str) -> Result<Self, Self::ParseError> {
-        match s {
-            "cycle" | "Cycle" => Ok(Self),
-            _ => Err(anyhow::anyhow!(
-                "Invalid Cycle: {s}. Expected 'cycle' or 'Cycle'."
-            )),
-        }
-    }
-}
 
 impl Units for Cycle {}
 

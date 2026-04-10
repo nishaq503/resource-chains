@@ -8,6 +8,10 @@ pub use process::{Device, Process};
 pub use resource::Resource;
 pub use units::Units;
 
+extern crate resource_cycles_derive;
+
+pub use resource_cycles_derive::Reflective;
+
 /// A `Reflective` type is one that can be named as a `String` and parsed from a `String`.
 pub trait Reflective: Sized {
     /// The type of error that can occur when parsing an instance of the type from a string.
