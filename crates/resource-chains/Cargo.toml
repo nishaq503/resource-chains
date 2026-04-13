@@ -6,6 +6,7 @@ license.workspace = true
 
 [dependencies]
 anyhow.workspace = true
+lazy-regex = { workspace = true }
 resource-chains-derive = { workspace = true }
 
 [lints]

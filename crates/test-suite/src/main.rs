@@ -10,6 +10,7 @@ fn main() {
 
     assert_eq!(Foo::type_name(), "Foo");
     assert!(Foo::parse("Foo").is_ok());
+    assert!(Foo::parse("foo").is_ok());
     assert!(Foo::parse("Bar").is_err());
 
     println!("All tests passed!");

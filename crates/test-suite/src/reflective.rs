@@ -12,11 +12,14 @@ impl Reflective for Foo {
         "Foo"
     }
 
+    fn regex_pattern<'a>() -> &'a resource_chains::lazy_regex::Regex {
+        resource_chains::lazy_regex::regex!(r"^(?i)foo$")
+    }
+
     fn parse(s: &str) -> Result<Self, Self::ParseError> {
-        if s == "Foo" {
-            Ok(Self)
-        } else {
-            Err(anyhow::anyhow!("Invalid input for Foo: {s}"))
+        match s {
+            "foo" | "Foo" => Ok(Self),
+            _ => Err(anyhow::anyhow!("Invalid input for Foo: {s}")),
         }
     }
 }

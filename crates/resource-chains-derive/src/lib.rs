@@ -25,14 +25,20 @@ fn reflective_derive2(item: TokenStream2) -> deluxe::Result<TokenStream2> {
 
     // Get the default type name (the struct name)
     let ident = &ast.ident;
-    let ident_str_hyphenated = hyphenate_struct_name(ident);
-
-    // Add the hyphenated struct name to the list of extra names, so that it can be parsed as well.
-    extra_names.insert(0, ident.to_string());
-    let extra_names_str = extra_names.join(", ");
-
     // Split the generics into the parts needed for the impl.
     let (impl_generics, type_generics, where_clause) = ast.generics.split_for_impl();
+
+    // Add the hyphenated struct name to the list of extra names, so that it can be parsed as well.
+    let ident_kebab = to_kebab_case(ident);
+    extra_names.insert(0, ident.to_string());
+
+    // Create a regex pattern that matches any of the extra names, e.g. `^(foo|Foo|f|F)$`.
+    let regex_pattern = format!("^({}|{})$", ident_kebab, extra_names.join("|"));
+
+    let error_message = format!(
+        "Invalid value: {{s}}. Expected '{ident_kebab}', or one of: {}.",
+        extra_names.join(", ")
+    );
 
     // generate impl
     Ok(quote::quote! {
@@ -40,14 +46,18 @@ fn reflective_derive2(item: TokenStream2) -> deluxe::Result<TokenStream2> {
             type ParseError = ::resource_chains::anyhow::Error;
 
             fn type_name() -> &'static str {
-                #ident_str_hyphenated
+                #ident_kebab
+            }
+
+            fn regex_pattern<'a>() -> &'a ::resource_chains::lazy_regex::Regex {
+                ::resource_chains::lazy_regex::regex!(#regex_pattern)
             }
 
             fn parse(s: &str) -> Result<Self, Self::ParseError> {
-                match s {
-                    #ident_str_hyphenated #(| #extra_names)* => Ok(Self),
-                    _ => Err(::resource_chains::anyhow::anyhow!("Invalid value: {s}. Expected '{}', or one of: {}.", #ident_str_hyphenated, #extra_names_str)),
-                }
+                Self::regex_pattern().captures(s).map_or_else(
+                    || Err(::resource_chains::anyhow::anyhow!(#error_message, s = s)),
+                    |_| Ok(Self)
+                )
             }
         }
     })
@@ -84,7 +94,7 @@ pub fn reflective_derive(item: TokenStream) -> TokenStream {
 }
 
 /// Converts the name of a struct to a string literal which has '-'s instead of camel case, e.g. `MyStruct` becomes `"my-struct"`.
-fn hyphenate_struct_name(ident: &syn::Ident) -> String {
+fn to_kebab_case(ident: &syn::Ident) -> String {
     let ident_str = ident.to_string();
     let mut result = String::new();
     for (i, c) in ident_str.chars().enumerate() {

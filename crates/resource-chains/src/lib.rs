@@ -9,8 +9,9 @@ extern crate resource_chains_derive;
 
 pub use resource_chains_derive::Reflective;
 
-// Re-export of `anyhow` because the `Reflective` trait and its derive macro require it.
+// Re-exports of some crates because the `Reflective` trait and its derive macro require it.
 pub use anyhow;
+pub use lazy_regex;
 
 /// A `Reflective` type is one that can be named as, and parsed from, a string.
 ///
@@ -33,6 +34,10 @@ pub use anyhow;
 ///
 ///     fn type_name() -> &'static str {
 ///        "foo"
+///     }
+///
+///     fn regex_pattern<'a>() -> &'a lazy_regex::Regex {
+///         lazy_regex::regex!(r"^(?i)foo$") // Case-insensitive match for "foo"
 ///     }
 ///
 ///     fn parse(s: &str) -> Result<Self, Self::ParseError> {
@@ -80,6 +85,9 @@ pub trait Reflective: Sized {
     /// The name of the type.
     fn type_name() -> &'static str;
 
+    /// A regex pattern that matches valid string representations of instances of the type.
+    fn regex_pattern<'a>() -> &'a lazy_regex::Regex;
+
     /// Parse an instance of the type from a string.
     ///
     /// # Errors
@@ -95,6 +103,11 @@ impl Reflective for () {
         "()"
     }
 
+    #[expect(clippy::trivial_regex)]
+    fn regex_pattern<'a>() -> &'a lazy_regex::Regex {
+        lazy_regex::regex!(r"^\(\)$")
+    }
+
     fn parse(s: &str) -> Result<Self, Self::ParseError> {
         match s {
             "()" => Ok(()),
@@ -102,28 +115,3 @@ impl Reflective for () {
         }
     }
 }
-
-/// A macro to implement `Reflective` for primitive types.
-macro_rules! impl_reflective_for_primitive {
-    ($($t:ty),*) => {
-        $(
-            impl Reflective for $t {
-                type ParseError = anyhow::Error;
-
-                fn type_name() -> &'static str {
-                    stringify!($t)
-                }
-
-                fn parse(s: &str) -> Result<Self, Self::ParseError> {
-                    s.parse::<$t>().map_err(|e| {
-                        anyhow::anyhow!("Failed to parse '{}' as {}: {}", s, Self::type_name(), e)
-                    })
-                }
-            }
-        )*
-    };
-}
-
-impl_reflective_for_primitive!(
-    i8, i16, i32, i64, i128, isize, u8, u16, u32, u64, u128, usize, f32, f64, bool, char
-);
