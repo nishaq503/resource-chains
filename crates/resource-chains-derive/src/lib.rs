@@ -8,7 +8,7 @@ use syn::DeriveInput;
 
 /// Any extra attributes for the struct on which we will derive the `Reflective` trait.
 #[derive(deluxe::ExtractAttributes)]
-#[deluxe(attributes(extra_names))]
+#[deluxe(attributes(reflective))]
 struct ReflectiveStructAttributes {
     /// `extra_names` is a list of additional string representations for the type, in addition to the default type name.
     #[deluxe(default = Vec::new())]
@@ -35,6 +35,7 @@ fn reflective_derive2(item: TokenStream2) -> deluxe::Result<TokenStream2> {
     // Create a regex pattern that matches any of the extra names, e.g. `^(foo|Foo|f|F)$`.
     let regex_pattern = format!("^({}|{})$", ident_kebab, extra_names.join("|"));
 
+    // Create the error message for failing to parse.
     let error_message = format!(
         "Invalid value: {{s}}. Expected '{ident_kebab}', or one of: {}.",
         extra_names.join(", ")
@@ -67,7 +68,7 @@ fn reflective_derive2(item: TokenStream2) -> deluxe::Result<TokenStream2> {
 ///
 /// By default, the type name (with hyphens instead of camel case) will be used as the string representation of the type. For example, `MyStruct` will be
 /// represented as `"my-struct"`. The struct can be parsed from this string, as well as the actual struct name, i.e. `"MyStruct"`. You can specify any
-/// additional string representations using the `extra_names` attribute, e.g. `#[extra_names(extra_names = ["ms", "Ms"])]`.
+/// additional string representations using the `reflective` attribute, e.g. `#[reflective(extra_names = ["ms", "Ms"])]`.
 ///
 /// # Example
 ///
@@ -78,17 +79,17 @@ fn reflective_derive2(item: TokenStream2) -> deluxe::Result<TokenStream2> {
 /// struct Foo;
 ///
 /// #[derive(Reflective)]
-/// #[extra_names(extra_names = ["b"])]
+/// #[reflective(extra_names = ["b"])]
 /// struct Bar;
 ///
 /// #[derive(Reflective)]
-/// #[extra_names(extra_names = ["fb", "FB"])]
+/// #[reflective(extra_names = ["fb", "FB"])]
 /// struct FooBar;
 /// ```
 ///
 /// In this example, the `Foo` struct can be parsed from the string `"foo"` or `"Foo"`, the `Bar` struct can be parsed from the string `"bar"` or `"b"`, and the
 /// `FooBar` struct can be parsed from the string `"foo-bar"`, `"fb"`, or `"FB"`.
-#[proc_macro_derive(Reflective, attributes(extra_names))]
+#[proc_macro_derive(Reflective, attributes(reflective))]
 pub fn reflective_derive(item: TokenStream) -> TokenStream {
     reflective_derive2(item.into()).unwrap().into()
 }

@@ -19,7 +19,7 @@ impl Time for Cycle {
 
 /// A `Second` is a unit of time equal to one second.
 #[derive(Reflective, Clone, Copy, Debug, PartialEq, Eq, Hash)]
-#[extra_names(extra_names = ["sec", "s"])]
+#[reflective(extra_names = ["sec", "s"])]
 pub struct Second;
 
 impl Units for Second {}

@@ -61,7 +61,7 @@ pub use lazy_regex;
 /// use resource_chains::Reflective;
 ///
 /// #[derive(Reflective)]
-/// #[extra_names(extra_names = ["fb", "FB"])]
+/// #[reflective(extra_names = ["fb", "FB"])]
 /// struct FooBar;
 ///
 /// // The `type_name` is derived from the struct name, and is converted to
