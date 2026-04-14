@@ -17,9 +17,6 @@ pub use lazy_regex;
 ///
 /// This is useful for defining resources and processes in a way that can be easily serialized and deserialized, and can be used in cross-language contexts.
 ///
-/// We provide a default implementation of `Reflective` for the unit type `()`, and for many primitive types. We also provide a macro to derive `Reflective`
-/// for custom types.
-///
 /// # Example
 ///
 /// You can implement `Reflective` for your own types as follows.
@@ -41,10 +38,10 @@ pub use lazy_regex;
 ///     }
 ///
 ///     fn parse(s: &str) -> Result<Self, Self::ParseError> {
-///         match s {
-///             "foo" | "Foo" => Ok(Self),
-///             _ => Err(format!("Invalid input: {s}. Expected 'foo' or 'Foo'.")),
-///         }
+///         Self::regex_pattern().captures(s).map_or_else(
+///             || Err(format!("Invalid input: {s}. Expected 'foo' or 'Foo'.")),
+///             |_| Ok(Self)
+///         )
 ///     }
 /// }
 ///
@@ -94,24 +91,4 @@ pub trait Reflective: Sized {
     ///
     /// Returns an error if the string cannot be parsed into an instance of the type.
     fn parse(s: &str) -> Result<Self, Self::ParseError>;
-}
-
-impl Reflective for () {
-    type ParseError = anyhow::Error;
-
-    fn type_name() -> &'static str {
-        "()"
-    }
-
-    #[expect(clippy::trivial_regex)]
-    fn regex_pattern<'a>() -> &'a lazy_regex::Regex {
-        lazy_regex::regex!(r"^\(\)$")
-    }
-
-    fn parse(s: &str) -> Result<Self, Self::ParseError> {
-        match s {
-            "()" => Ok(()),
-            _ => Err(anyhow::anyhow!("Invalid unit: {s}. Expected '()'.")),
-        }
-    }
 }
