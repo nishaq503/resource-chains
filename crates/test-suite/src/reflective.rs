@@ -12,7 +12,7 @@ impl Reflective for Foo {
         "Foo"
     }
 
-    fn regex_pattern<'a>() -> &'a resource_chains::lazy_regex::Regex {
+    fn regex<'a>() -> &'a resource_chains::lazy_regex::Regex {
         resource_chains::lazy_regex::regex!(r"^(?i)foo$")
     }
 
@@ -46,7 +46,7 @@ impl Reflective for Bar {
         "Bar"
     }
 
-    fn regex_pattern<'a>() -> &'a resource_chains::lazy_regex::Regex {
+    fn regex<'a>() -> &'a resource_chains::lazy_regex::Regex {
         resource_chains::lazy_regex::regex!(r"^Bar::a=(?P<a>-?\d+)$")
     }
 
@@ -55,7 +55,7 @@ impl Reflective for Bar {
     }
 
     fn parse(s: &str) -> Result<Self, Self::ParseError> {
-        if let Some(captures) = Self::regex_pattern().captures(s) {
+        if let Some(captures) = Self::regex().captures(s) {
             let a_str = captures
                 .name("a")
                 .ok_or_else(|| anyhow::anyhow!("Missing 'a' in input for Bar: {s}"))?
@@ -87,3 +87,46 @@ pub struct FooBar2 {
     /// `bar`
     pub bar: Bar,
 }
+
+/// `Baz`
+pub struct Baz(pub i32, pub f32);
+
+impl Reflective for Baz {
+    type ParseError = anyhow::Error;
+
+    fn type_name() -> &'static str {
+        "Baz"
+    }
+
+    fn regex<'a>() -> &'a lazy_regex::Regex {
+        resource_chains::lazy_regex::regex!(r"^Baz::(-?\d+):(-?\d+(?:\.\d+)?)$")
+    }
+
+    fn to_string(&self) -> String {
+        format!("Baz::{}:{}", self.0, self.1)
+    }
+
+    fn parse(s: &str) -> Result<Self, Self::ParseError> {
+        if let Some(captures) = Self::regex().captures(s) {
+            let f0 = captures
+                .get(1)
+                .ok_or_else(|| anyhow::anyhow!("Missing field 0 for Baz: {s}"))?
+                .as_str()
+                .parse()
+                .map_err(|e| anyhow::anyhow!("Invalid field 0 for Baz: {s}. Error: {e}"))?;
+            let f1 = captures
+                .get(2)
+                .ok_or_else(|| anyhow::anyhow!("Missing field 1 for Baz: {s}"))?
+                .as_str()
+                .parse()
+                .map_err(|e| anyhow::anyhow!("Invalid field 1 for Baz: {s}. Error: {e}"))?;
+            Ok(Self(f0, f1))
+        } else {
+            Err(anyhow::anyhow!("Invalid input for Baz: {s}"))
+        }
+    }
+}
+
+/// `Baz2`
+#[derive(Reflective)]
+pub struct Baz2(pub i32, pub f32);

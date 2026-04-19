@@ -1,10 +1,15 @@
 //! Tests for the workspace.
 
-#![expect(clippy::unwrap_used)]
+#![expect(
+    clippy::unwrap_used,
+    clippy::similar_names,
+    clippy::disallowed_names,
+    clippy::too_many_lines
+)]
 
 use resource_chains::Reflective;
 
-use test_suite::reflective::{Bar, Foo, Foo2, FooBar, FooBar2};
+use test_suite::reflective::{Bar, Baz, Baz2, Foo, Foo2, FooBar, FooBar2};
 
 /// A simple test to ensure that the workspace is set up correctly.
 fn main() {
@@ -81,6 +86,65 @@ fn main() {
     assert!(re_foobar2.is_ok());
     let re_foobar2 = re_foobar2.unwrap();
     assert_eq!(re_foobar2.bar.a, foobar2.bar.a);
+
+    let baz = Baz(42, 0.5);
+    assert_eq!(Baz::type_name(), "Baz");
+    let ok_values = [
+        "Baz::42:0.5",
+        "Baz::-1:-0.5",
+        "Baz::42:-1.5",
+        "Baz::-1:1.5",
+        "Baz::0:0",
+    ];
+    for s in ok_values {
+        let b = Baz::parse(s);
+        assert!(
+            b.is_ok(),
+            "Failed to parse valid input for Baz: {:?}. Error: {:?}",
+            s,
+            b.err()
+        );
+    }
+    let re_baz = Baz::parse(&baz.to_string());
+    assert!(re_baz.is_ok());
+    let re_baz = re_baz.unwrap();
+    assert_eq!(re_baz.0, baz.0);
+    assert!(
+        (re_baz.1 - baz.1).abs() < f32::EPSILON,
+        "Parsed value for second field does not match original. Expected: {}, Got: {}",
+        baz.1,
+        re_baz.1
+    );
+
+    let baz2 = Baz2(42, 0.5);
+    assert_eq!(Baz2::type_name(), "Baz2");
+    assert_eq!(baz2.to_string(), "Baz2::42:0.5");
+    let ok_values = [
+        "Baz2::42:0.5",
+        "Baz2::-1:-0.5",
+        "Baz2::42:-1.5",
+        "Baz2::-1:1.5",
+        "Baz2::0:0",
+    ];
+    for s in ok_values {
+        let b = Baz2::parse(s);
+        assert!(
+            b.is_ok(),
+            "Failed to parse valid input for Baz2: {:?}. Error: {:?}",
+            s,
+            b.err()
+        );
+    }
+    let re_baz2 = Baz2::parse(&baz2.to_string());
+    assert!(re_baz2.is_ok());
+    let re_baz2 = re_baz2.unwrap();
+    assert_eq!(re_baz2.0, baz2.0);
+    assert!(
+        (re_baz2.1 - baz2.1).abs() < f32::EPSILON,
+        "Parsed value for second field does not match original. Expected: {}, Got: {}",
+        baz2.1,
+        re_baz2.1
+    );
 
     println!("All tests passed!");
 }

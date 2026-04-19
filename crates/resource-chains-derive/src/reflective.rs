@@ -26,7 +26,18 @@ pub fn derive(item: TokenStream2) -> deluxe::Result<TokenStream2> {
                     .collect::<Vec<_>>();
                 derive_struct(&ast, &extra_names, &error_message, &fields)
             }
-            syn::Fields::Unnamed(_fields_unnamed) => todo!(),
+            syn::Fields::Unnamed(fields_unnamed) => {
+                if fields_unnamed.unnamed.is_empty() {
+                    derive_unit_struct(&ast, &extra_names, &error_message)
+                } else {
+                    let field_types = fields_unnamed
+                        .unnamed
+                        .iter()
+                        .map(|f| &f.ty)
+                        .collect::<Vec<_>>();
+                    derive_tuple_struct(&ast, &extra_names, &error_message, &field_types)
+                }
+            }
             syn::Fields::Unit => derive_unit_struct(&ast, &extra_names, &error_message),
         },
         syn::Data::Enum(_) => unimplemented!("`Reflective` cannot yet be derived for Enums"),
@@ -88,7 +99,7 @@ fn derive_unit_struct(
                 #ident_str
             }
 
-            fn regex_pattern<'a>() -> &'a ::resource_chains::lazy_regex::Regex {
+            fn regex<'a>() -> &'a ::resource_chains::lazy_regex::Regex {
                 ::resource_chains::lazy_regex::regex!(#regex_pattern)
             }
 
@@ -97,9 +108,83 @@ fn derive_unit_struct(
             }
 
             fn parse(s: &str) -> Result<Self, Self::ParseError> {
-                Self::regex_pattern().captures(s).map_or_else(
+                Self::regex().captures(s).map_or_else(
                     || Err(::resource_chains::anyhow::anyhow!(#error_message, s = s)),
                     |_| Ok(Self),
+                )
+            }
+        }
+    }
+}
+
+/// Derives the `Reflective` trait for a struct with unnamed fields (tuple struct).
+fn derive_tuple_struct(
+    ast: &syn::DeriveInput,
+    names: &[String],
+    error_message: &str,
+    field_types: &[&syn::Type],
+) -> TokenStream2 {
+    let ident = &ast.ident;
+    let ident_str = ident.to_string();
+    let (impl_generics, type_generics, where_clause) = ast.generics.split_for_impl();
+    let _names_pattern = format!("({})", names.join("|"));
+    let field_indices = (0..field_types.len())
+        .map(syn::Index::from)
+        .collect::<Vec<_>>();
+
+    quote::quote! {
+        impl #impl_generics Reflective for #ident #type_generics #where_clause {
+            type ParseError = ::resource_chains::anyhow::Error;
+
+            fn type_name() -> &'static str {
+                #ident_str
+            }
+
+            fn regex<'a>() -> &'a ::resource_chains::lazy_regex::Regex {
+                unimplemented!("Regex pattern generation for tuple structs is not yet implemented")
+                // let sub_patterns = vec![
+                //     #names_pattern,
+                //     r":",
+                //     #(
+                //         r":",
+                //         #field_types::regex().as_str(),
+                //     )*
+                // ];
+
+                // let regex_pattern = concat!(
+                //     #names_pattern,
+                //     r":",
+                // );
+
+                // let regex_pattern = concat!(
+                //     #names_pattern,
+                //     r":",
+                //     #(
+                //         r":",
+                //         #field_types::regex().as_str(),
+                //     )*
+                // );
+                // ::resource_chains::lazy_regex::regex!(regex_pattern)
+            }
+
+            fn to_string(&self) -> String {
+                // Call `Reflective::to_string` on each field and join them with `:`.
+                let field_strings = vec![
+                    #(::resource_chains::Reflective::to_string(&self.#field_indices)),*
+                ].join(":");
+                format!("{}::{}", #ident_str, field_strings)
+            }
+
+            fn parse(s: &str) -> Result<Self, Self::ParseError> {
+                Self::regex().captures(s).map_or_else(
+                    || Err(::resource_chains::anyhow::anyhow!(#error_message, s = s)),
+                    |captures| Ok(Self(
+                        #(
+                            ::resource_chains::Reflective::parse(
+                                captures.get(#field_indices + 2).unwrap().as_str()
+                            )?,
+                        )*
+                    )),
                 )
             }
         }
@@ -126,7 +211,7 @@ fn derive_struct(
                 #ident_str
             }
 
-            fn regex_pattern<'a>() -> &'a ::resource_chains::lazy_regex::Regex {
+            fn regex<'a>() -> &'a ::resource_chains::lazy_regex::Regex {
                 ::resource_chains::lazy_regex::regex!(#regex_pattern)
             }
 
@@ -138,7 +223,7 @@ fn derive_struct(
             }
 
             fn parse(s: &str) -> Result<Self, Self::ParseError> {
-                Self::regex_pattern().captures(s).map_or_else(
+                Self::regex().captures(s).map_or_else(
                     || Err(::resource_chains::anyhow::anyhow!(#error_message, s = s)),
                     |captures| {
                         Ok(Self {

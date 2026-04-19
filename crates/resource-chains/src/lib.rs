@@ -33,7 +33,7 @@ pub use lazy_regex;
 ///        "foo"
 ///     }
 ///
-///     fn regex_pattern<'a>() -> &'a lazy_regex::Regex {
+///     fn regex<'a>() -> &'a lazy_regex::Regex {
 ///         lazy_regex::regex!(r"^(?i)foo$") // Case-insensitive match for "foo"
 ///     }
 ///
@@ -42,7 +42,7 @@ pub use lazy_regex;
 ///     }
 ///
 ///     fn parse(s: &str) -> Result<Self, Self::ParseError> {
-///         Self::regex_pattern().captures(s).map_or_else(
+///         Self::regex().captures(s).map_or_else(
 ///             || Err(format!("Invalid input: {s}. Expected 'foo' or 'Foo'.")),
 ///             |_| Ok(Self)
 ///         )
@@ -86,7 +86,7 @@ pub trait Reflective: Sized {
     fn type_name() -> &'static str;
 
     /// A regex pattern that matches valid string representations of instances of the type.
-    fn regex_pattern<'a>() -> &'a lazy_regex::Regex;
+    fn regex<'a>() -> &'a lazy_regex::Regex;
 
     /// Convert an instance of the type into a string.
     fn to_string(&self) -> String;
@@ -106,7 +106,7 @@ impl Reflective for () {
         "()"
     }
 
-    fn regex_pattern<'a>() -> &'a lazy_regex::Regex {
+    fn regex<'a>() -> &'a lazy_regex::Regex {
         lazy_regex::regex!(r"^\s*$") // Match an empty string (with optional whitespace)
     }
 
@@ -115,7 +115,7 @@ impl Reflective for () {
     }
 
     fn parse(s: &str) -> Result<Self, Self::ParseError> {
-        Self::regex_pattern().captures(s).map_or_else(
+        Self::regex().captures(s).map_or_else(
             || {
                 Err(anyhow::anyhow!(
                     "Invalid input: {s}. Expected an empty string."
@@ -137,7 +137,7 @@ macro_rules! impl_reflective_for_primitives {
                     stringify!($t)
                 }
 
-                fn regex_pattern<'a>() -> &'a lazy_regex::Regex {
+                fn regex<'a>() -> &'a lazy_regex::Regex {
                     lazy_regex::regex!(r"^-?\d+(\.\d+)?$") // Match integers and floating-point numbers
                 }
 
@@ -146,7 +146,7 @@ macro_rules! impl_reflective_for_primitives {
                 }
 
                 fn parse(s: &str) -> Result<Self, Self::ParseError> {
-                    Self::regex_pattern().captures(s).map_or_else(
+                    Self::regex().captures(s).map_or_else(
                         || Err(anyhow::anyhow!("Invalid input: {s}. Expected a valid {}.", stringify!($t))),
                         |_| s.parse().map_err(|e| anyhow::anyhow!("Failed to parse '{}': {}", s, e)),
                     )
